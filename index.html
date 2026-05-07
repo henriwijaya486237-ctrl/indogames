@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hooligans Game Hub</title>
+    <!-- Font Modern & Ikon -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=26">
+    
+    <style>
+        /* Gaya Khusus untuk Elemen UI Baru */
+        .control-wrapper { position: relative; display: inline-block; }
+        .help-circle {
+            background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);
+            border: 1px solid rgba(14, 165, 233, 0.4); color: white;
+            border-radius: 50%; width: 26px; height: 26px; font-weight: bold;
+            font-size: 14px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; position: absolute; top: -10px; right: -10px;
+            z-index: 10; padding: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .help-circle:active { transform: scale(0.9); background: rgba(14, 165, 233, 0.4); }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .rules-content::-webkit-scrollbar { width: 5px; }
+        .rules-content::-webkit-scrollbar-thumb { background: rgba(14, 165, 233, 0.5); border-radius: 10px; }
+        
+        /* Gaya Khusus Live Chat */
+        #chat-messages::-webkit-scrollbar { width: 4px; }
+        #chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        .chat-bubble { padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; word-break: break-word; max-width: 85%; animation: popIn 0.2s ease-out; pointer-events: auto; }
+        .chat-bubble.me { background: linear-gradient(135deg, rgba(14, 165, 233, 0.9), rgba(99, 102, 241, 0.9)); align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-bubble.other { background: rgba(0,0,0,0.5); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid rgba(14, 165, 233, 0.3); backdrop-filter: blur(4px); }
+        .chat-sender { font-size: 0.6rem; color: #38bdf8; margin-bottom: 2px; font-weight: 600; text-shadow: 0 1px 2px black; }
+        
+        #chat-badge {
+            position: absolute; top: -5px; right: -5px; background-color: #f43f5e;
+            color: white; font-size: 0.7rem; font-weight: bold; min-width: 18px; height: 18px;
+            border-radius: 50%; justify-content: center; align-items: center;
+            padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
+        }
+
+        /* Gaya Catur 2D Premium */
+        #chess-wrapper {
+            position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+            width: 95%; max-width: 400px; display: none; flex-direction: column; gap: 10px;
+            z-index: 15; pointer-events: auto;
+        }
+        #chess-board-2d {
+            display: grid; grid-template-columns: repeat(8, 1fr);
+            width: 100%; aspect-ratio: 1; border: 3px solid #0f172a; border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(14, 165, 233, 0.3);
+            overflow: hidden; background: #1e293b; touch-action: none;
+        }
+        .chess-square { display: flex; justify-content: center; align-items: center; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .chess-square.light { background-color: #64748b; }
+        .chess-square.dark { background-color: #334155; }
+        .chess-square.highlight { background-color: rgba(14, 165, 233, 0.7) !important; }
+        .chess-square.last-move { background-color: rgba(252, 211, 77, 0.4); }
+        .chess-piece { width: 85%; height: 85%; background-size: contain; background-repeat: no-repeat; background-position: center; pointer-events: auto; filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.5)); transition: transform 0.1s; touch-action: none; }
+        
+        .valid-move-dot { width: 25%; height: 25%; border-radius: 50%; background-color: rgba(14, 165, 233, 0.8); pointer-events: none; box-shadow: 0 0 5px rgba(14, 165, 233, 0.5); position: absolute; }
+        .valid-move-capture { width: 90%; height: 90%; border-radius: 50%; border: 4px solid rgba(14, 165, 233, 0.8); pointer-events: none; background: transparent; position: absolute; }
+
+        /* HUD PEMAIN CATUR TERBARU */
+        .vs-card { background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); width: 100%; border: 1px solid rgba(255,255,255,0.1); }
+        .player-info-box { display: flex; align-items: center; gap: 12px; }
+        .profile-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; }
+        .profile-icon.blue { background: #2563eb; color: white; }
+        .profile-icon.gold { background: #d97706; color: white; }
+        .vs-name { font-weight: 800; font-size: 0.9rem; letter-spacing: 0.5px; color: white; text-transform: uppercase; }
+        
+        .badge-row { display: flex; gap: 6px; margin-top: 4px; }
+        .mmr-badge { background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #38bdf8; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .mmr-badge.gold { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #fcd34d; }
+        .lvl-badge { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.3); color: #cbd5e1; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+
+        .vs-timer { font-size: 1.1rem; font-weight: 800; color: white; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 5px; cursor: pointer; pointer-events: auto; }
+        .vs-timer.active { background: #e11d48; border-color: #f43f5e; animation: pulse 2s infinite; }
+        
+        /* Drag and Drop Visuals */
+        .ghost-piece { position: fixed; width: 45px; height: 45px; pointer-events: none !important; z-index: 9999; transform: translate(-50%, -50%); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); opacity: 0.9; }
+
+        /* WARNA KHUSUS MODE AI CHEAT */
+        .cheat-hint-from { background-color: rgba(16, 185, 129, 0.6) !important; box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.9); z-index: 1; }
+        .cheat-hint-to { background-color: rgba(239, 68, 68, 0.6) !important; box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.9); z-index: 1; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+        .cyber-modal { background: linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(15, 23, 42, 0.98)); border: 1px solid #0ea5e9; box-shadow: 0 0 20px rgba(14, 165, 233, 0.3), inset 0 0 10px rgba(14, 165, 233, 0.1); border-radius: 12px; }
+        .cyber-btn { background: rgba(14, 165, 233, 0.05); border: 1px solid rgba(14, 165, 233, 0.4); color: #fff; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; padding: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+        .cyber-btn:hover, .cyber-btn:active { background: rgba(14, 165, 233, 0.25); box-shadow: 0 0 15px rgba(14, 165, 233, 0.5); border-color: #0ea5e9; transform: scale(0.95); }
+
+        /* =========================================
+           GAYA KHUSUS LUDO 2D VIP (GRID STATIS)
+           ========================================= */
+        .ludo-macro-grid {
+            display: grid;
+            grid-template-areas:
+                "red-base top-path green-base"
+                "left-path center right-path"
+                "blue-base bottom-path yellow-base";
+            grid-template-columns: 40% 20% 40%;
+            grid-template-rows: 40% 20% 40%;
+            width: 100%; height: 100%;
+            background: #fff;
+            border: 4px solid #0f172a;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        .ludo-base { display: flex; justify-content: center; align-items: center; padding: 18%; }
+        .red-base { grid-area: red-base; background: #ef4444; }
+        .green-base { grid-area: green-base; background: #10b981; }
+        .yellow-base { grid-area: yellow-base; background: #f59e0b; }
+        .blue-base { grid-area: blue-base; background: #3b82f6; }
+
+        .base-white-box {
+            background: #fff; width: 100%; height: 100%; border-radius: 15%;
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            gap: 15%; padding: 15%; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+        }
+        .pawn-spot { border-radius: 50%; border: 3px solid rgba(0,0,0,0.1); box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        .red-spot { background: #ef4444; }
+        .green-spot { background: #10b981; }
+        .yellow-spot { background: #f59e0b; }
+        .blue-spot { background: #3b82f6; }
+
+        .ludo-path { display: grid; }
+        .top-path { grid-area: top-path; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(6, 1fr); }
+        .bottom-path { grid-area: bottom-path; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(6, 1fr); }
+        .left-path { grid-area: left-path; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); }
+        .right-path { grid-area: right-path; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); }
+
+        .cell { border: 1px solid rgba(15, 23, 42, 0.15); display: flex; justify-content: center; align-items: center; position: relative; background: #f8fafc; }
+        .hr-red, .red-start { background: rgba(239, 68, 68, 0.7); }
+        .hr-green, .green-start { background: rgba(16, 185, 129, 0.7); }
+        .hr-yellow, .yellow-start { background: rgba(245, 158, 11, 0.7); }
+        .hr-blue, .blue-start { background: rgba(59, 130, 246, 0.7); }
+
+        .safe-star::after {
+            content: '⭐'; font-size: 1rem; position: absolute; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+        }
+
+        .ludo-center-goal {
+            grid-area: center;
+            background: conic-gradient(
+                from 315deg,
+                #10b981 0deg 90deg,
+                #f59e0b 90deg 180deg,
+                #3b82f6 180deg 270deg,
+                #ef4444 270deg 360deg
+            );
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+            border: 1px solid #0f172a;
+        }
+
+        #ludo-pawns-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 20;
+        }
+        .ludo-pawn-token {
+            position: absolute;
+            width: 6.66%; height: 6.66%;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 2px 5px rgba(255,255,255,0.3);
+            background-size: cover;
+            background-position: center;
+            background-color: #1e293b;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s ease-in-out, left 0.4s ease-in-out;
+            transform-origin: center;
+            z-index: 20;
+        }
+        .ludo-pawn-token:active { transform: scale(0.7) !important; }
+        .ludo-pawn-token.Red { border-color: #ef4444; }
+        .ludo-pawn-token.Green { border-color: #10b981; }
+        .ludo-pawn-token.Blue { border-color: #3b82f6; }
+        .ludo-pawn-token.Yellow { border-color: #f59e0b; }
+        
+        /* Tombol Animasi Download App */
+        @keyframes pulseDownloadBtn {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+</head>
+<body>
+
+    <div id="loader" class="glass-panel-full"><div class="modern-spinner"></div><p>Memuat Ruangan...</p></div>
+    <div id="animated-bg">
+        <div class="cloud" style="top: 15%; animation-duration: 45s; transform: scale(1.2); opacity: 0.4;"></div>
+        <div class="cloud" style="top: 35%; animation-duration: 35s; transform: scale(0.8); opacity: 0.3;"></div>
+        <div class="cloud" style="top: 60%; animation-duration: 55s; transform: scale(1.5); opacity: 0.2;"></div>
+        <div class="bird" style="top: 20%; animation-duration: 18s; animation-delay: 0s;"></div>
+        <div class="bird" style="top: 25%; animation-duration: 22s; animation-delay: 3s; transform: scale(0.7);"></div>
+    </div>
+
+    <div id="ui-container" style="display: none;">
+
+        <div id="global-banner-container" style="display: none;"><div id="banner-text" class="banner-text">SELAMAT DATANG DI HOOLIGANS GAME HUB!</div></div>
+        
+        <!-- Tombol Owner -->
+        <button id="owner-panel-btn" style="display: none;">👑</button>
+
+        <div id="score-board-container" class="glass-panel-small" style="display: none; position: fixed; top: 42px; left: 50%; transform: translateX(-50%); z-index: 60; padding: 6px 15px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(252, 211, 77, 0.4); background: rgba(2, 6, 23, 0.85); box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+            <span style="font-size: 0.6rem; color: #9ca3af; font-weight: 800; letter-spacing: 1px; text-align: center; display: block;">SKOR</span>
+            <div id="score-display" style="font-size: 0.75rem; font-weight: 800; color: white; white-space: nowrap; display: flex; align-items: center;">-</div>
+        </div>
+
+        <div id="game-info" style="display: none; position: fixed; top: 42px; left: 10px; z-index: 60; flex-direction: column; gap: 6px; pointer-events: none;">
+            <button id="back-btn" class="modern-btn danger small" style="pointer-events: auto; width: fit-content; padding: 5px 12px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">◀ KELUAR</button>
+            <div class="glass-panel-small" style="padding: 4px 10px; text-align: center; border: 1px solid rgba(14, 165, 233, 0.4); background: rgba(2, 6, 23, 0.8); border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                <span id="room-display" style="font-size: 0.65rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.5px;">-</span>
+            </div>
+        </div>
+
+        <div style="position: fixed; top: 42px; right: 10px; z-index: 70; display: flex; gap: 8px;">
+            <button id="chat-toggle-btn" class="glass-panel" style="pointer-events: auto; width: 34px; height: 34px; border-radius: 50%; font-size: 1rem; cursor: pointer; align-items: center; justify-content: center; border: 2px solid var(--primary-color); position: relative; background: rgba(0,0,0,0.6); display: none;">
+                💬
+                <span id="chat-badge" style="display: none;">0</span>
+            </button>
+            <button id="settings-btn" class="glass-panel" style="pointer-events: auto; width: 34px; height: 34px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary-color); background: rgba(0,0,0,0.6);">⚙️</button>
+        </div>
+        
+        <div id="chat-panel" style="display: none; pointer-events: none; position: fixed; top: 85px; right: 10px; width: 170px; height: 190px; z-index: 45; flex-direction: column; padding: 0; animation: popIn 0.3s ease;">
+            <div id="chat-messages" style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; padding-right: 2px; pointer-events: none;"></div>
+            <div style="display: flex; gap: 4px; pointer-events: auto;">
+                <input type="text" id="chat-input" class="modern-input" placeholder="Ketik..." style="margin: 0; padding: 6px; font-size: 0.7rem; border-radius: 6px; flex-grow: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(14, 165, 233, 0.4); backdrop-filter: blur(5px);">
+                <button id="chat-send-btn" class="modern-btn primary small" style="border-radius: 6px; padding: 0 10px;">➤</button>
+            </div>
+        </div>
+
+        <!-- ==============================================
+             HUB MENU BARU (UI 3D COVER-FLOW & PAPAN LEADERBOARD)
+        =============================================== -->
+        <div id="game-hub-menu" class="overlay-menu" style="display: none; justify-content: flex-start; padding-top: 55px;">
+            
+            <!-- CONTAINER TOMBOL DOWNLOAD APP -->
+            <div id="app-download-container" style="display: none; width: 100%; text-align: center; margin-bottom: 5px; padding-top: 10px;">
+                <a id="app-download-btn" href="#" target="_blank" class="modern-btn" style="background: linear-gradient(135deg, #10b981, #059669); text-decoration: none; display: inline-block; padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; animation: pulseDownloadBtn 2s infinite; font-weight: bold; border: 1px solid #34d399; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
+                    📥 Download Apk Hooligans
+                </a>
+            </div>
+
+            <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+                <h1 class="title-gradient" style="font-size: 2rem;">HOOLIGANS</h1>
+                <h3 class="subtitle" style="font-size: 0.8rem; margin-bottom: 15px;">GAME HUB</h3>
+            </div>
+
+            <!-- SEKSI GAMES (LEBIH KECIL) -->
+            <div class="hub-section">
+                <div class="hub-section-title">GAMES</div>
+                <div class="carousel-container games" id="games-carousel">
+                    <div class="carousel-card game-card" id="btn-play-uno" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.3)); border-color: rgba(14, 165, 233, 0.5);">
+                        <div class="card-inner">
+                            <div class="card-icon">🃏</div>
+                            <div class="card-title">UNO 3D</div>
+                        </div>
+                    </div>
+                    <div class="carousel-card game-card" id="btn-play-chess" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(6, 182, 212, 0.3)); border-color: rgba(2, 132, 199, 0.5);">
+                        <div class="card-inner">
+                            <div class="card-icon">♟️</div>
+                            <div class="card-title">CATUR VIP</div>
+                        </div>
+                    </div>
+                    <div class="carousel-card game-card" id="btn-play-ludo" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3)); border-color: rgba(16, 185, 129, 0.5);">
+                        <div class="card-inner">
+                            <div class="card-icon">🎲</div>
+                            <div class="card-title">LUDO 2D</div>
+                        </div>
+                    </div>
+                    <div class="carousel-card game-card" id="btn-play-snake" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3)); border-color: rgba(245, 158, 11, 0.5);">
+                        <div class="card-inner">
+                            <div class="card-icon">🐍</div>
+                            <div class="card-title">ULAR TANGGA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEKSI LEADERBOARD (PAPAN 3D) -->
+            <div class="hub-section">
+                <div class="hub-section-title">LEADERBOARD</div>
+                <div class="carousel-container leaderboard" id="lb-carousel">
+                    
+                    <div class="carousel-card leaderboard-board" onclick="openLeaderboard('UNO 3D', 'UNO')">
+                        <div class="card-inner lb-inner">
+                            <div class="lb-header" style="color: #fcd34d;">🏆 TOP UNO 3D</div>
+                            <div class="lb-mini-list" id="mini-lb-UNO">
+                                <!-- Di-inject via JS -->
+                            </div>
+                            <div class="lb-hint">Klik untuk lihat Top 10</div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-card leaderboard-board" onclick="openLeaderboard('CATUR VIP', 'CATUR')">
+                        <div class="card-inner lb-inner">
+                            <div class="lb-header" style="color: #38bdf8;">🏅 TOP CATUR</div>
+                            <div class="lb-mini-list" id="mini-lb-CATUR"></div>
+                            <div class="lb-hint">Klik untuk lihat Top 10</div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-card leaderboard-board" onclick="openLeaderboard('LUDO 2D', 'LUDO')">
+                        <div class="card-inner lb-inner">
+                            <div class="lb-header" style="color: #34d399;">🎖️ TOP LUDO</div>
+                            <div class="lb-mini-list" id="mini-lb-LUDO"></div>
+                            <div class="lb-hint">Klik untuk lihat Top 10</div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-card leaderboard-board" onclick="openLeaderboard('ULAR TANGGA', 'SNAKE')">
+                        <div class="card-inner lb-inner">
+                            <div class="lb-header" style="color: #f43f5e;">🎲 TOP ULAR TANGGA</div>
+                            <div class="lb-mini-list" id="mini-lb-SNAKE"></div>
+                            <div class="lb-hint">Klik untuk lihat Top 10</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL POPUP LEADERBOARD -->
+        <div id="leaderboard-modal" class="overlay-menu" style="display: none; z-index: 120; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+            <div class="menu-box glass-panel" style="padding: 20px; width: 90%; max-width: 350px; animation: popIn 0.3s ease;">
+                <h2 id="lb-modal-title" class="title-gradient" style="font-size: 1.6rem; margin-bottom: 15px; background: linear-gradient(to right, #fcd34d, #f59e0b); -webkit-background-clip: text;">TOP 10 GAME</h2>
+                <div id="lb-modal-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; padding-right: 5px;">
+                    <!-- Items di-inject via JS -->
+                </div>
+                <button class="modern-btn primary" onclick="document.getElementById('leaderboard-modal').style.display='none'" style="width: 100%; margin-top: 20px;">TUTUP</button>
+            </div>
+        </div>
+
+
+        <div id="lobby-menu" class="overlay-menu" style="display: none;">
+            <div class="menu-box glass-panel">
+                <h1 class="title-gradient">GAME MULTIPLAYER</h1>
+                <h3 class="subtitle">MULTIPLAYER</h3>
+                <button id="copy-link-btn" class="modern-btn warning small" style="display: none; width: 100%; margin-bottom: 15px;">🔗 SALIN LINK ROOM</button>
+                <button id="create-room-btn" class="modern-btn primary" style="width: 100%; margin-bottom: 10px;">BUAT ROOM BARU</button>
+                <button id="rules-btn" class="modern-btn action" style="width: 100%; margin-bottom: 20px;">📖 CARA BERMAIN</button>
+                <div class="divider"><span>ATAU GABUNG</span></div>
+                <input type="text" id="room-code-input" class="modern-input" placeholder="Masukkan Kode Room">
+                <button id="join-room-btn" class="modern-btn secondary" style="width: 100%; margin-bottom: 15px;">GABUNG ROOM</button>
+                <button id="back-to-hub-btn" style="background: none; border: none; color: #38bdf8; text-decoration: underline; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Kembali ke Menu Utama</button>
+            </div>
+        </div>
+
+        <!-- ==============================================
+             CATUR WRAPPER 
+        =============================================== -->
+        <div id="chess-wrapper">
+            <div class="vs-card" id="chess-hud-opponent">
+                <div class="player-info-box">
+                    <div class="profile-icon blue">♜</div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="vs-name" id="opponent-name">MENUNGGU...</span>
+                        <div class="badge-row">
+                            <span class="mmr-badge" id="opponent-elo">Elo -</span>
+                            <span class="lvl-badge" id="opponent-lvl">Lvl -</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vs-timer" id="opponent-timer">⏱️ 10:00</div>
+            </div>
+
+            <div id="chess-status" class="status-msg" style="width: 100%; text-align: center; margin: 0; padding: 6px; font-size: 0.8rem; border-color: rgba(14, 165, 233, 0.4);">MENUNGGU LAWAN...</div>
+
+            <div id="chess-board-2d"></div>
+
+            <div class="vs-card" id="chess-hud-player">
+                <div class="player-info-box">
+                    <div class="profile-icon gold">♙</div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="vs-name" id="player-name">PLAYER</span>
+                        <div class="badge-row">
+                            <span class="mmr-badge gold" id="player-elo">Elo -</span>
+                            <span class="lvl-badge" id="player-lvl">Lvl -</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vs-timer" id="player-timer">⏱️ 10:00</div>
+            </div>
+
+            <button id="chess-surrender-btn" class="modern-btn danger small" style="margin-top: 5px; width: 100%; font-weight: bold; padding: 8px; letter-spacing: 1px; pointer-events: auto;">🏳️ MENYERAH</button>
+        </div>
+
+        <!-- ==============================================
+             LUDO 2D VIP WRAPPER
+             ============================================== -->
+        <div id="ludo-wrapper" style="display: none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; z-index: 15; pointer-events: auto;">
+            <div class="ludo-hud-grid">
+                <div class="ludo-player-card red" id="ludo-hud-red" style="opacity: 0.5;">
+                    <div class="ludo-avatar" id="ludo-avatar-red"></div>
+                    <div class="ludo-name" id="ludo-name-red">MENUNGGU</div>
+                    <div class="ludo-inline-dice" id="ludo-dice-red"></div>
+                </div>
+                <div class="ludo-player-card green" id="ludo-hud-green" style="opacity: 0.5; flex-direction: row-reverse;">
+                    <div class="ludo-avatar" id="ludo-avatar-green"></div>
+                    <div class="ludo-name" id="ludo-name-green" style="text-align: right;">MENUNGGU</div>
+                    <div class="ludo-inline-dice" id="ludo-dice-green"></div>
+                </div>
+            </div>
+
+            <div id="ludo-board-2d-container" style="position: relative; width: 100%; aspect-ratio: 1; margin: 10px 0;">
+                <div id="ludo-vip-grid-bg" class="ludo-macro-grid">
+                    <div class="ludo-base red-base">
+                        <div class="base-white-box">
+                            <div class="pawn-spot red-spot"></div><div class="pawn-spot red-spot"></div>
+                            <div class="pawn-spot red-spot"></div><div class="pawn-spot red-spot"></div>
+                        </div>
+                    </div>
+                    <div class="ludo-path top-path">
+                        <div class="cell"></div> <div class="cell"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-green"></div> <div class="cell green-start safe-star"></div>
+                        <div class="cell safe-star"></div> <div class="cell hr-green"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-green"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-green"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-green"></div> <div class="cell"></div>
+                    </div>
+                    <div class="ludo-base green-base">
+                        <div class="base-white-box">
+                            <div class="pawn-spot green-spot"></div><div class="pawn-spot green-spot"></div>
+                            <div class="pawn-spot green-spot"></div><div class="pawn-spot green-spot"></div>
+                        </div>
+                    </div>
+                    <div class="ludo-path left-path">
+                        <div class="cell"></div> <div class="cell red-start safe-star"></div> <div class="cell"></div> <div class="cell"></div> <div class="cell"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-red"></div> <div class="cell hr-red"></div> <div class="cell hr-red"></div> <div class="cell hr-red"></div> <div class="cell hr-red"></div>
+                        <div class="cell"></div> <div class="cell"></div> <div class="cell safe-star"></div> <div class="cell"></div> <div class="cell"></div> <div class="cell"></div>
+                    </div>
+                    <div class="ludo-center-goal"></div>
+                    <div class="ludo-path right-path">
+                        <div class="cell"></div> <div class="cell"></div> <div class="cell"></div> <div class="cell safe-star"></div> <div class="cell"></div> <div class="cell"></div>
+                        <div class="cell hr-yellow"></div> <div class="cell hr-yellow"></div> <div class="cell hr-yellow"></div> <div class="cell hr-yellow"></div> <div class="cell hr-yellow"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell"></div> <div class="cell"></div> <div class="cell"></div> <div class="cell yellow-start safe-star"></div> <div class="cell"></div>
+                    </div>
+                    <div class="ludo-base blue-base">
+                        <div class="base-white-box">
+                            <div class="pawn-spot blue-spot"></div><div class="pawn-spot blue-spot"></div>
+                            <div class="pawn-spot blue-spot"></div><div class="pawn-spot blue-spot"></div>
+                        </div>
+                    </div>
+                    <div class="ludo-path bottom-path">
+                        <div class="cell"></div> <div class="cell hr-blue"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-blue"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-blue"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell hr-blue"></div> <div class="cell safe-star"></div>
+                        <div class="cell blue-start safe-star"></div> <div class="cell hr-blue"></div> <div class="cell"></div>
+                        <div class="cell"></div> <div class="cell"></div> <div class="cell"></div>
+                    </div>
+                    <div class="ludo-base yellow-base">
+                        <div class="base-white-box">
+                            <div class="pawn-spot yellow-spot"></div><div class="pawn-spot yellow-spot"></div>
+                            <div class="pawn-spot yellow-spot"></div><div class="pawn-spot yellow-spot"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="ludo-pawns-layer"></div>
+            </div>
+
+            <div class="ludo-hud-grid">
+                <div class="ludo-player-card blue" id="ludo-hud-blue" style="opacity: 0.5;">
+                    <div class="ludo-avatar" id="ludo-avatar-blue"></div>
+                    <div class="ludo-name" id="ludo-name-blue">MENUNGGU</div>
+                    <div class="ludo-inline-dice" id="ludo-dice-blue"></div>
+                </div>
+                <div class="ludo-player-card yellow" id="ludo-hud-yellow" style="opacity: 0.5; flex-direction: row-reverse;">
+                    <div class="ludo-avatar" id="ludo-avatar-yellow"></div>
+                    <div class="ludo-name" id="ludo-name-yellow" style="text-align: right;">MENUNGGU</div>
+                    <div class="ludo-inline-dice" id="ludo-dice-yellow"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================================
+             ULAR TANGGA VIP WRAPPER
+             ============================================== -->
+        <div id="snake-wrapper" style="display: none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; z-index: 15; pointer-events: auto;">
+            <div class="ludo-hud-grid" id="snake-hud-top"></div>
+            <div id="snake-board-2d-container" style="position: relative; width: 100%; aspect-ratio: 1; margin: 10px 0; border: 4px solid #0f172a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); background: #f8fafc; touch-action: none;">
+                <div id="snake-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); width: 100%; height: 100%;"></div>
+                <svg id="snake-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;"></svg>
+                <div id="snake-pawns-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></div>
+            </div>
+            <div class="ludo-hud-grid" id="snake-hud-bottom"></div>
+        </div>
+
+        <button id="nav-left-btn" class="nav-btn" style="display: none;">&#10094;</button>
+        <button id="nav-right-btn" class="nav-btn" style="display: none;">&#10095;</button>
+
+        <!-- KONTROL UNO -->
+        <div id="game-controls" class="floating-ui" style="display: none; position: absolute; bottom: env(safe-area-inset-bottom, 25px); left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; flex-direction: column; align-items: center; gap: 10px;">
+            <div id="message-box" class="status-msg" style="width: max-content; padding: 6px 20px;">MENUNGGU PEMAIN LAIN...</div>
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap; padding: 0 10px;">
+                <div class="control-wrapper"><button id="draw-btn" class="modern-btn action" style="box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);">TARIK KARTU</button></div>
+                <div class="control-wrapper"><button id="uno-btn" class="modern-btn warning" style="box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">UNO!</button></div>
+                <div id="catch-wrapper" class="control-wrapper" style="display: none;"><button id="catch-btn" class="modern-btn danger" style="box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">CIDUK!</button></div>
+            </div>
+        </div>
+
+        <!-- POPUP ANIMASI EPIC -->
+        <div id="epic-popup" style="display: none; position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; pointer-events: none; text-align: center; width: 100%;">
+            <div id="epic-popup-text" style="font-size: 5rem; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin: 0; padding: 0; text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px currentColor;"></div>
+            <div id="epic-popup-sub" style="font-size: 1.5rem; font-weight: 800; color: white; text-shadow: 0 0 10px black; margin-top: -10px;"></div>
+        </div>
+
+        <div id="promotion-modal" class="overlay-menu" style="display: none; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+            <div class="menu-box cyber-modal" style="padding: 25px 20px; animation: popIn 0.3s ease; max-width: 320px;">
+                <h3 style="font-size: 1.6rem; margin-bottom: 10px; color: #0ea5e9; text-shadow: 0 0 10px rgba(14, 165, 233, 0.5); font-weight: 800; letter-spacing: 2px;">EVOLUSI PION</h3>
+                <p style="margin-bottom: 20px; color: #94a3b8; font-size: 0.9rem;">Pilih bidak untuk mengeksekusi lawan:</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <button class="cyber-btn" onclick="selectChessPromotion('q')"><img src="https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg" width="40"><br>Menteri</button>
+                    <button class="cyber-btn" onclick="selectChessPromotion('r')"><img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg" width="40"><br>Benteng</button>
+                    <button class="cyber-btn" onclick="selectChessPromotion('b')"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg" width="40"><br>Gajah</button>
+                    <button class="cyber-btn" onclick="selectChessPromotion('n')"><img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" width="40"><br>Kuda</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-over-menu" class="overlay-menu" style="display: none;">
+            <div class="menu-box glass-panel">
+                <h2 class="title-gradient" style="font-size: 2.5rem;">SELESAI</h2>
+                <div style="margin: 20px 0;">
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 5px;">Pemenang:</p>
+                    <p id="winner-name" class="winner-text">-</p>
+                </div>
+                <button id="play-again-btn" class="modern-btn primary" style="width: 100%; margin-bottom: 15px;">MAIN LAGI</button>
+                <button id="exit-game-btn" class="modern-btn danger" style="width: 100%;">KEMBALI KE LOBBY</button>
+            </div>
+        </div>
+
+        <div id="rules-modal" class="overlay-menu" style="display: none; z-index: 100; background: rgba(0,0,0,0.8);">
+            <div class="menu-box glass-panel" style="max-width: 90%; height: 85vh; display: flex; flex-direction: column; padding: 25px 20px; animation: popIn 0.3s ease;"><button id="close-rules-btn" class="modern-btn primary" style="width: 100%; margin-top: 20px;">MENGERTI, TUTUP!</button></div>
+        </div>
+
+        <!-- ==============================================
+             PENGATURAN & TEMA
+        =============================================== -->
+        <div id="settings-modal" class="overlay-menu" style="display: none; z-index: 100; background: rgba(0,0,0,0.8);">
+            <div class="menu-box glass-panel" style="max-width: 90%; padding: 25px 20px; animation: popIn 0.3s ease;">
+                <h2 class="title-gradient" style="font-size: 2rem; margin-bottom: 20px;">PENGATURAN</h2>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; text-align: left;">
+                    <button id="toggle-anim-btn" class="modern-btn secondary" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px;">
+                        <span style="font-size: 0.95rem;">☁️ Animasi Latar</span>
+                        <span id="anim-status" style="color: #34d399; font-weight: 800;">HIDUP</span>
+                    </button>
+                    
+                    <button id="toggle-simple-mode-btn" class="modern-btn secondary" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px;">
+                        <span style="font-size: 0.95rem;">🧊 Mode Sederhana</span>
+                        <span id="simple-mode-status" style="color: #f43f5e; font-weight: 800;">MATI</span>
+                    </button>
+
+                    <button id="toggle-theme-btn" class="modern-btn secondary" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px;">
+                        <span style="font-size: 0.95rem;">🎨 Tema Tampilan</span>
+                        <span id="theme-status" style="color: #38bdf8; font-weight: 800;">MALAM</span>
+                    </button>
+                </div>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px; text-align: center;">Aktifkan "Mode Sederhana" jika HP terasa patah-patah saat bermain.</p>
+                <button id="close-settings-btn" class="modern-btn primary" style="width: 100%;">SIMPAN & TUTUP</button>
+            </div>
+        </div>
+
+        <div id="owner-modal" class="overlay-menu" style="display: none; z-index: 110; background: rgba(0,0,0,0.8);">
+            <div class="menu-box glass-panel" style="max-width: 90%; padding: 25px 20px; animation: popIn 0.3s ease; border-color: #fbbf24; overflow-y: auto; max-height: 90vh;">
+                <h2 class="title-gradient" style="font-size: 2rem; margin-bottom: 10px; background: linear-gradient(to right, #fbbf24, #d97706); -webkit-background-clip: text;">PANEL OWNER</h2>
+                
+                <div style="text-align: left; margin-top: 15px;">
+                    <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4; margin-bottom: 20px;">
+                        💡 <b>Info Kontrol APK:</b><br>
+                        Pengaturan tombol Download Aplikasi APK sekarang dikendalikan langsung melalui bot Telegram.<br><br>
+                        Kirim file <code>.apk</code> ke bot untuk mengupload, lalu nyalakan/matikan fiturnya dari menu di bot.
+                    </p>
+
+                    <!-- Toggle Force Sub Untuk Owner -->
+                    <button id="toggle-forcesub-btn" class="modern-btn secondary" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px; border-color: rgba(251, 191, 36, 0.4); margin-bottom: 10px;">
+                        <span style="font-size: 0.95rem;">🔒 Force Sub Grup</span>
+                        <span id="forcesub-status" style="color: #34d399; font-weight: 800;">AKTIF</span>
+                    </button>
+
+                    <!-- Toggle Banner -->
+                    <button id="toggle-banner-btn" class="modern-btn secondary" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px; border-color: rgba(251, 191, 36, 0.4); margin-bottom: 10px;">
+                        <span style="font-size: 0.95rem;">📢 Status Banner</span>
+                        <span id="banner-status" style="color: #34d399; font-weight: 800;">MENYALA</span>
+                    </button>
+                    
+                    <div style="margin-top: 10px; margin-bottom: 20px; padding-bottom: 15px;">
+                        <label style="font-size: 0.85rem; color: #e2e8f0; margin-bottom: 8px; display: block;">Teks Banner Berjalan:</label>
+                        <input type="text" id="banner-input" class="modern-input" placeholder="Ketik pengumuman di sini..." style="margin-bottom: 10px; font-size: 0.9rem; text-transform: none;">
+                        <button id="update-banner-btn" class="modern-btn action" style="width: 100%; font-size: 0.95rem; background: linear-gradient(135deg, #d97706, #f59e0b);">UPDATE BANNER GLOBAL</button>
+                    </div>
+
+                </div>
+                <button id="close-owner-btn" class="modern-btn primary" style="width: 100%; margin-top: 10px;">TUTUP PANEL</button>
+            </div>
+        </div>
+
+        <div id="custom-popup" class="overlay-menu" style="display: none; z-index: 150; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);">
+            <div class="glass-panel-small" style="padding: 25px; width: 85%; max-width: 320px; text-align: center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: rgba(15, 23, 42, 0.9); border: 1px solid var(--primary-color);">
+                <h3 id="popup-title" style="margin: 0 0 10px 0; font-size: 1.3rem; color: var(--warning-color);">INFO</h3>
+                <p id="popup-message" style="font-size: 1rem; color: #e2e8f0; margin-bottom: 25px; line-height: 1.4;">Pesan info atau konfirmasi ada di sini.</p>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="popup-cancel-btn" class="modern-btn secondary" style="flex: 1; display: none;">BATAL</button>
+                    <button id="popup-ok-btn" class="modern-btn primary" style="flex: 1;">OK</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT UTAMA -->
+    <script src="app.js?v=26"></script>
+    <script src="uno.js?v=26"></script>
+    <script src="chess.js?v=26"></script>
+    <script src="ludo.js?v=26"></script>
+    <script src="snake.js?v=26"></script>
+
+    <script>
+        const gameInfoNode = document.getElementById('game-info');
+        const chessWrapperNode = document.getElementById('chess-wrapper');
+        
+        const uiObserver = new MutationObserver(() => {
+            if (gameInfoNode.style.display !== 'none' && window.currentGameType === 'CHESS') {
+                chessWrapperNode.style.display = 'flex';
+            } else {
+                chessWrapperNode.style.display = 'none';
+            }
+        });
+        
+        uiObserver.observe(gameInfoNode, { attributes: true, attributeFilter: ['style'] });
+
+        // Logika UI Force Sub di Owner Modal
+        const toggleForceSubBtn = document.getElementById('toggle-forcesub-btn');
+        let isForceSubActive = true;
+        if (toggleForceSubBtn) {
+            toggleForceSubBtn.addEventListener('click', () => {
+                isForceSubActive = !isForceSubActive;
+                const statusSpan = document.getElementById('forcesub-status');
+                if (isForceSubActive) {
+                    statusSpan.innerText = 'AKTIF';
+                    statusSpan.style.color = '#34d399';
+                } else {
+                    statusSpan.innerText = 'MATI';
+                    statusSpan.style.color = '#f43f5e';
+                }
+                if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+                    window.ws.send(JSON.stringify({ type: 'toggle_forcesub', status: isForceSubActive }));
+                }
+            });
+        }
+
+        /* =======================================================
+           SISTEM ENHANCEMENT LUDO VIP (OVERRIDE NATIVE)
+        ======================================================= */
+        (function initLudoVIPEnhancements() {
+            const originalDrawBoard = window.drawBoard2D;
+            window.drawBoard2D = function() {
+                console.log("💎 Ludo VIP Board Active - Mencegah Grid Default...");
+            };
+
+            let prevPositions = {};
+
+            setInterval(() => {
+                if (window.currentGameType !== 'LUDO' || !document.getElementById('ludo-wrapper') || document.getElementById('ludo-wrapper').style.display === 'none') return;
+
+                const spots = {};
+                document.querySelectorAll('.ludo-pawn-token').forEach(pawn => {
+                    const key = pawn.style.left + '_' + pawn.style.top;
+                    if (!spots[key]) spots[key] = [];
+                    spots[key].push(pawn);
+                });
+
+                Object.values(spots).forEach(group => {
+                    group.forEach((pawn, idx) => {
+                        if (group.length > 1) {
+                            const scale = 0.65;
+                            const tx = idx % 2 === 0 ? '-25%' : '25%';
+                            const ty = idx < 2 ? '-25%' : '25%';
+                            pawn.style.transform = `scale(${scale}) translate(${tx}, ${ty})`;
+                            pawn.style.zIndex = 30 + idx;
+                        } else {
+                            pawn.style.transform = `scale(0.85) translate(0px, 0px)`;
+                            pawn.style.zIndex = 20;
+                        }
+                    });
+                });
+
+                if (window.isMyTurn && window.currentLudoState && window.currentLudoState.dice_rolled) {
+                    const myColor = window.currentLudoState.your_color;
+                    document.querySelectorAll('.ludo-pawn-token').forEach(pawn => {
+                        if (pawn.classList.contains(myColor)) {
+                            pawn.style.boxShadow = '0 0 15px #34d399, inset 0 0 10px #34d399';
+                            pawn.style.filter = 'brightness(1.15)';
+                        } else {
+                            pawn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.7)';
+                            pawn.style.filter = 'brightness(0.6)';
+                        }
+                    });
+                } else {
+                    document.querySelectorAll('.ludo-pawn-token').forEach(pawn => {
+                        pawn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.7), inset 0 2px 5px rgba(255,255,255,0.3)';
+                        pawn.style.filter = 'none';
+                    });
+                }
+            }, 100);
+
+            const originalHandleLudoMessage = window.handleLudoMessage;
+            window.handleLudoMessage = function(data) {
+                if (originalHandleLudoMessage) originalHandleLudoMessage(data);
+                
+                if (data.type === 'ludo_state') {
+                    Object.keys(data.players).forEach(ws => {
+                        const pData = data.players[ws];
+                        if (!prevPositions[ws]) {
+                            prevPositions[ws] = [...pData.pawns];
+                        } else {
+                            pData.pawns.forEach((pos, idx) => {
+                                const prevPos = prevPositions[ws][idx];
+                                if (prevPos >= 0 && pos === -1) {
+                                    if (window.showEpicPopup) {
+                                        window.showEpicPopup("TEBAS!", pData.name + " Dimakan!", "#ef4444");
+                                        if (window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                                    }
+                                } 
+                                else if (prevPos < 57 && pos === 57) {
+                                    if (window.showEpicPopup) {
+                                        window.showEpicPopup("GOAL!", "Bidak masuk finish!", "#fcd34d");
+                                        if (window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                                    }
+                                }
+                            });
+                            prevPositions[ws] = [...pData.pawns];
+                        }
+                    });
+                }
+            };
+        })();
+    </script>
+</body>
+</html>
