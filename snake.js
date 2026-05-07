@@ -160,7 +160,7 @@ function initializeSnakePawns(playersData) {
     Object.keys(playersData).forEach((ws) => {
         const data = playersData[ws];
         const colorClass = colors[idx % 4];
-        const avatarUrl = data.avatar_url || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
+        const avatarUrl = data.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // FIXED AVATAR
 
         const hud = document.createElement('div');
         hud.id = `snake-hud-${ws}`;

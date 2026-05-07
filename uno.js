@@ -175,7 +175,7 @@ function selectWildColor(color) {
 function spawnCardOnTable(cardName) {
     let texture = textureCache[cardName];
     if (!texture) {
-        texture = textureLoader.load(`assets_kartu/${cardName}.jpg`);
+        texture = textureLoader.load(`${cardName}.jpg`); // FIXED PATH
         textureCache[cardName] = texture;
     }
 
@@ -207,7 +207,7 @@ function syncHandCards(serverHandArray) {
     serverHandArray.forEach(cardName => {
         let texture = textureCache[cardName];
         if (!texture) {
-            texture = textureLoader.load(`assets_kartu/${cardName}.jpg`);
+            texture = textureLoader.load(`${cardName}.jpg`); // FIXED PATH
             textureCache[cardName] = texture;
         }
 
