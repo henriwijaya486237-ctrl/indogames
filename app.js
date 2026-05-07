@@ -1,5 +1,5 @@
 // --- KONFIGURASI PENTING ---
-const WS_URL = 'wss://friend-pouncing-oval.ngrok-free.dev'; 
+const WS_URL = 'wss://version-limb-willpower.ngrok-free.dev'; // URL Ngrok Baru
 const BOT_LINK = 'https://t.me/UnoYukbot'; 
 const OWNER_ID = 7019297628; 
 
@@ -18,6 +18,7 @@ if (!tg.initData) {
 // --- VARIABEL GLOBAL ---
 window.playerName = (tg.initDataUnsafe?.user?.first_name || "USER_" + Math.floor(Math.random() * 1000)).substring(0, 25);
 window.userId = tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000);
+window.myAvatarUrl = tg.initDataUnsafe?.user?.photo_url || ''; // AMBIL FOTO PROFIL
 window.currentRoom = null;
 window.currentGameType = 'UNO';
 window.isMyTurn = false;
@@ -415,7 +416,6 @@ function resetToLobby() {
 
 let isReconnecting = false;
 let autoJoinRoomCode = null;
-const myAvatarUrl = tg.initDataUnsafe?.user?.photo_url || '';
 
 const urlParams = new URLSearchParams(window.location.search);
 const roomParam = urlParams.get('room');
@@ -443,7 +443,7 @@ function connectWebSocket() {
                 setTimeout(() => { 
                     uiLoader.style.display = 'none'; 
                     window.currentRoom = autoJoinRoomCode;
-                    window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: autoJoinRoomCode, user_id: window.userId, init_data: tg.initData, avatar_url: myAvatarUrl }));
+                    window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: autoJoinRoomCode, user_id: window.userId, init_data: tg.initData, avatar_url: window.myAvatarUrl }));
                     autoJoinRoomCode = null; 
                     window.history.replaceState({}, document.title, window.location.pathname);
                     lobbyMenu.style.display = 'flex'; 
@@ -694,10 +694,13 @@ backToHubBtn.addEventListener('click', () => {
     lobbyMenu.style.display = 'none'; gameHubMenu.style.display = 'flex';
 });
 
+// --- PERBAIKAN: Menambahkan pesan Error jika WebSocket putus ---
 createRoomBtn.addEventListener('click', () => { 
     tg.HapticFeedback.impactOccurred('light'); 
     if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-        window.ws.send(JSON.stringify({ type: 'create_room', player_name: window.playerName, user_id: window.userId, game_type: window.currentGameType, init_data: tg.initData, avatar_url: myAvatarUrl })); 
+        window.ws.send(JSON.stringify({ type: 'create_room', player_name: window.playerName, user_id: window.userId, game_type: window.currentGameType, init_data: tg.initData, avatar_url: window.myAvatarUrl })); 
+    } else {
+        window.showCustomAlert("Server belum terhubung (Cek Ngrok Anda). Harap muat ulang halaman ini.", "KONEKSI GAGAL");
     }
 });
 
@@ -706,7 +709,9 @@ joinRoomBtn.addEventListener('click', () => {
     if (code) {
         window.currentRoom = code; tg.HapticFeedback.impactOccurred('light');
         if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-            window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: code, user_id: window.userId, init_data: tg.initData, avatar_url: myAvatarUrl }));
+            window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: code, user_id: window.userId, init_data: tg.initData, avatar_url: window.myAvatarUrl }));
+        } else {
+            window.showCustomAlert("Server belum terhubung (Cek Ngrok Anda). Harap muat ulang halaman ini.", "KONEKSI GAGAL");
         }
     } else { window.showCustomAlert("Masukkan kode room terlebih dahulu!"); }
 });
