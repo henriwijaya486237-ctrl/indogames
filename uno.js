@@ -175,7 +175,8 @@ function selectWildColor(color) {
 function spawnCardOnTable(cardName) {
     let texture = textureCache[cardName];
     if (!texture) {
-        texture = textureLoader.load(`${cardName}.jpg`); // FIXED PATH
+        // PERBAIKAN: Hapus assets_kartu/
+        texture = textureLoader.load(`${cardName}.jpg`);
         textureCache[cardName] = texture;
     }
 
@@ -207,7 +208,8 @@ function syncHandCards(serverHandArray) {
     serverHandArray.forEach(cardName => {
         let texture = textureCache[cardName];
         if (!texture) {
-            texture = textureLoader.load(`${cardName}.jpg`); // FIXED PATH
+            // PERBAIKAN: Hapus assets_kartu/
+            texture = textureLoader.load(`${cardName}.jpg`);
             textureCache[cardName] = texture;
         }
 

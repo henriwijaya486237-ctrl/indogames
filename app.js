@@ -415,6 +415,7 @@ function resetToLobby() {
 
 let isReconnecting = false;
 let autoJoinRoomCode = null;
+const myAvatarUrl = tg.initDataUnsafe?.user?.photo_url || '';
 
 const urlParams = new URLSearchParams(window.location.search);
 const roomParam = urlParams.get('room');
@@ -442,7 +443,7 @@ function connectWebSocket() {
                 setTimeout(() => { 
                     uiLoader.style.display = 'none'; 
                     window.currentRoom = autoJoinRoomCode;
-                    window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: autoJoinRoomCode, user_id: window.userId, init_data: tg.initData }));
+                    window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: autoJoinRoomCode, user_id: window.userId, init_data: tg.initData, avatar_url: myAvatarUrl }));
                     autoJoinRoomCode = null; 
                     window.history.replaceState({}, document.title, window.location.pathname);
                     lobbyMenu.style.display = 'flex'; 
@@ -696,7 +697,7 @@ backToHubBtn.addEventListener('click', () => {
 createRoomBtn.addEventListener('click', () => { 
     tg.HapticFeedback.impactOccurred('light'); 
     if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-        window.ws.send(JSON.stringify({ type: 'create_room', player_name: window.playerName, user_id: window.userId, game_type: window.currentGameType, init_data: tg.initData })); 
+        window.ws.send(JSON.stringify({ type: 'create_room', player_name: window.playerName, user_id: window.userId, game_type: window.currentGameType, init_data: tg.initData, avatar_url: myAvatarUrl })); 
     }
 });
 
@@ -704,7 +705,9 @@ joinRoomBtn.addEventListener('click', () => {
     const code = roomCodeInput.value.trim().toUpperCase();
     if (code) {
         window.currentRoom = code; tg.HapticFeedback.impactOccurred('light');
-        if (window.ws && window.ws.readyState === WebSocket.OPEN) window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: code, user_id: window.userId, init_data: tg.initData }));
+        if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+            window.ws.send(JSON.stringify({ type: 'join_room', player_name: window.playerName, room_code: code, user_id: window.userId, init_data: tg.initData, avatar_url: myAvatarUrl }));
+        }
     } else { window.showCustomAlert("Masukkan kode room terlebih dahulu!"); }
 });
 

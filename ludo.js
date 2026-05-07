@@ -92,7 +92,7 @@ function initializePawns2D(playersData) {
     Object.keys(playersData).forEach(ws => {
         const data = playersData[ws];
         const color = data.ludo_color;
-        const avatarUrl = data.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // FIXED AVATAR
+        const avatarUrl = data.avatar_url || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
         
         const hudCard = document.getElementById(`ludo-hud-${color.toLowerCase()}`);
         if(hudCard) {
