@@ -230,6 +230,14 @@ function executeChessMove(fromSq, toSq, promotionChoice) {
     if (move) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
         
+        // --- INJEKSI SFX GERAKAN / MAKAN BIDAK ---
+        const isCapture = move.flags.includes('c') || move.flags.includes('e');
+        if (isCapture) {
+            if (window.playSound) window.playSound('capture');
+        } else {
+            if (window.playSound) window.playSound('move');
+        }
+        
         lastMoveSquares = [fromSq, toSq];
         selectedSquare = null;
         validMoves = [];
@@ -353,6 +361,16 @@ window.startChessGame = function(data) {
 
 window.handleChessMessage = function(data) {
     if (data.type === 'chess_state') {
+        
+        // --- INJEKSI SFX UNTUK GERAKAN LAWAN ---
+        if (!window.isMyTurn && data.is_your_turn && data.last_move && typeof data.last_move === 'string') {
+            if (data.last_move.includes('x')) {
+                if (window.playSound) window.playSound('capture');
+            } else {
+                if (window.playSound) window.playSound('move');
+            }
+        }
+
         window.isMyTurn = data.is_your_turn;
         
         // --- SINKRONISASI WAKTU DARI SERVER ---

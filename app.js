@@ -24,6 +24,64 @@ window.currentGameType = 'UNO';
 window.isMyTurn = false;
 window.ws = null;
 
+// =====================================================================
+// SISTEM AUDIO (BGM & SFX) - ANTI CRASH / 404 SAFE
+// =====================================================================
+window.isMuted = false;
+
+window.sfx = {
+    click: new Audio('assets_audio/click.mp3'),
+    cardPlace: new Audio('assets_audio/card_place.mp3'),
+    cardDraw: new Audio('assets_audio/card_draw.mp3'),
+    unoShout: new Audio('assets_audio/uno_shout.mp3'),
+    dice: new Audio('assets_audio/dice_roll.mp3'),
+    move: new Audio('assets_audio/pawn_move.mp3'),
+    capture: new Audio('assets_audio/pawn_capture.mp3'),
+    slide: new Audio('assets_audio/slide.mp3'),
+    win: new Audio('assets_audio/win.mp3'),
+    lose: new Audio('assets_audio/lose.mp3')
+};
+
+window.bgm = new Audio('assets_audio/bgm_lobby.mp3');
+window.bgm.loop = true;
+window.bgm.volume = 0.4;
+
+window.playSound = function(soundName) {
+    if (window.isMuted) return;
+    const sound = window.sfx[soundName];
+    if (sound) {
+        sound.currentTime = 0;
+        const playPromise = sound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => { /* Diam-diam abaikan error 404 agar tidak crash */ });
+        }
+    }
+};
+
+window.playBGM = function() {
+    if (window.isMuted) return;
+    const playPromise = window.bgm.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(e => { /* Diam-diam abaikan error 404 agar tidak crash */ });
+    }
+};
+
+// Pancing BGM menyala pada interaksi pertama pengguna (Mencegah blokir browser autoplay)
+document.body.addEventListener('click', () => {
+    if (window.bgm.paused && !window.isMuted) {
+        window.playBGM();
+    }
+}, { once: true });
+
+// Global SFX untuk klik tombol UI
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.modern-btn') || e.target.closest('.carousel-card') || e.target.closest('.glass-panel') || e.target.closest('.cyber-btn') || e.target.closest('button')) {
+        window.playSound('click');
+    }
+});
+// =====================================================================
+
+
 window.sendGameMessage = function(payload) {
     if (window.ws && window.currentRoom && window.ws.readyState === WebSocket.OPEN) {
         payload.room_code = window.currentRoom;
@@ -574,9 +632,16 @@ function connectWebSocket() {
             }
             else if (data.type === 'game_over') {
                 if (data.reason === "Lawan keluar.") {
+                    window.playSound('win');
                     window.showCustomAlert(`🚪 <b>Lawan mu keluar room.</b>`, "INFO");
                     resetToLobby();
                     return; 
+                }
+
+                if (data.winner === window.playerName) {
+                    window.playSound('win');
+                } else if (data.winner !== "Draw" && data.winner !== "Remis / Seri") {
+                    window.playSound('lose');
                 }
 
                 tg.HapticFeedback.notificationOccurred('success');
@@ -815,6 +880,43 @@ rulesBtn.addEventListener('click', () => { tg.HapticFeedback.impactOccurred('lig
 document.getElementById('close-rules-btn').addEventListener('click', () => { tg.HapticFeedback.impactOccurred('light'); document.getElementById('rules-modal').style.display = 'none'; });
 document.getElementById('settings-btn').addEventListener('click', () => { tg.HapticFeedback.impactOccurred('light'); document.getElementById('settings-modal').style.display = 'flex'; });
 document.getElementById('close-settings-btn').addEventListener('click', () => { tg.HapticFeedback.impactOccurred('light'); document.getElementById('settings-modal').style.display = 'none'; });
+
+// --- INJEKSI TOMBOL MUTE AUDIO DINAMIS KE DALAM MODAL PENGATURAN ---
+(function injectAudioToggleBtn() {
+    const toggleAnimBtn = document.getElementById('toggle-anim-btn');
+    if (!toggleAnimBtn) return;
+    
+    const settingsContainer = toggleAnimBtn.parentElement;
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'modern-btn secondary';
+    muteBtn.style.width = '100%';
+    muteBtn.style.display = 'flex';
+    muteBtn.style.justifyContent = 'space-between';
+    muteBtn.style.alignItems = 'center';
+    muteBtn.style.padding = '15px';
+    muteBtn.innerHTML = '<span style="font-size: 0.95rem;">🎵 Suara & Musik</span><span id="audio-status" style="color: #34d399; font-weight: 800;">HIDUP</span>';
+    
+    muteBtn.addEventListener('click', () => {
+        tg.HapticFeedback.impactOccurred('light');
+        window.isMuted = !window.isMuted;
+        const audioStatus = muteBtn.querySelector('#audio-status');
+        
+        if (window.isMuted) {
+            audioStatus.innerText = 'MATI';
+            audioStatus.style.color = '#f43f5e';
+            window.bgm.pause();
+        } else {
+            audioStatus.innerText = 'HIDUP';
+            audioStatus.style.color = '#34d399';
+            window.playBGM();
+            window.playSound('click');
+        }
+    });
+    
+    // Sisipkan tepat di atas tombol Ganti Tema
+    settingsContainer.insertBefore(muteBtn, document.getElementById('toggle-theme-btn'));
+})();
+// ---------------------------------------------------------------------
 
 let isAnimActive = true;
 let isSimpleMode = false;

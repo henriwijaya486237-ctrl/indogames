@@ -227,6 +227,9 @@ async function moveSnakePawnStepByStep(pawnEl, fromPos, toPos, ws) {
         pawnEl.style.left = cssPos.left;
         pawnEl.style.top = cssPos.top;
         pawnEl.style.transform = 'scale(1.25)';
+        
+        if (window.playSound) window.playSound('move'); // SFX Langkah
+        
         await new Promise(r => setTimeout(r, 250));
     }
     
@@ -340,6 +343,8 @@ window.handleSnakeMessage = function(data) {
                 moveSnakePawnStepByStep(pawnEl, oldPos, newPos, ws).then(() => {
                     if (pData.special_move) {
                         setTimeout(() => {
+                            if (window.playSound) window.playSound('slide'); // INJEKSI SFX MELUNCUR
+                            
                             if (pData.special_move === 'ladder' && window.showEpicPopup) {
                                 window.showEpicPopup("TANGGA!", "Naik Ke Atas!", "#34d399");
                                 if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
@@ -368,6 +373,8 @@ window.handleSnakeMessage = function(data) {
     }
     else if (data.type === 'snake_dice_rolled') {
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        if (window.playSound) window.playSound('dice'); // INJEKSI SFX DADU
+        
         const activeWs = Object.keys(currentSnakeState.players).find(ws => currentSnakeState.players[ws].name === currentSnakeState.turn);
         const activeDice = document.getElementById(`snake-dice-${activeWs}`);
         if (activeDice) {

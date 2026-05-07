@@ -175,7 +175,6 @@ function selectWildColor(color) {
 function spawnCardOnTable(cardName) {
     let texture = textureCache[cardName];
     if (!texture) {
-        // PERBAIKAN: Hapus assets_kartu/
         texture = textureLoader.load(`${cardName}.jpg`);
         textureCache[cardName] = texture;
     }
@@ -195,6 +194,10 @@ function spawnCardOnTable(cardName) {
     cardMesh.rotation.set(-Math.PI / 2, 0, (Math.random() - 0.5) * 0.1); 
     
     window.unoGroup.add(cardMesh);
+    
+    // INJEKSI SFX KARTU DITARUH DI MEJA
+    if (window.playSound) window.playSound('cardPlace');
+    
     gsap.to(cardMesh.position, { y: 0.08, duration: 0.5, ease: "bounce.out" });
     
     tableCards.push(cardMesh);
@@ -202,13 +205,18 @@ function spawnCardOnTable(cardName) {
 
 function syncHandCards(serverHandArray) {
     if (JSON.stringify(currentHandData) === JSON.stringify(serverHandArray)) return;
+    
+    // INJEKSI SFX KARTU DITARIK (Mengecek jika jumlah kartu di tangan bertambah)
+    if (serverHandArray.length > currentHandData.length && currentHandData.length > 0) {
+        if (window.playSound) window.playSound('cardDraw');
+    }
+    
     currentHandData = serverHandArray;
     handCards.forEach(card => { disposeCard(card); handGroup.remove(card); }); handCards = [];
     
     serverHandArray.forEach(cardName => {
         let texture = textureCache[cardName];
         if (!texture) {
-            // PERBAIKAN: Hapus assets_kartu/
             texture = textureLoader.load(`${cardName}.jpg`);
             textureCache[cardName] = texture;
         }
@@ -354,13 +362,15 @@ window.handleUnoMessage = function(data) {
     }
     else if (data.type === 'uno_shout') {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
-        // Jangan munculkan untuk diri sendiri karena sudah ditrigger secara lokal di app.js
+        if (window.playSound) window.playSound('unoShout'); // INJEKSI SFX UNO SHOUT
+        
         if (data.player_name !== window.playerName) {
             window.showEpicPopup("UNO!", data.player_name, "#fcd34d"); 
         }
     }
     else if (data.type === 'uno_penalty') {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        if (window.playSound) window.playSound('cardDraw'); // INJEKSI SFX KARTU DITARIK (HUKUMAN)
         window.showEpicPopup("CIDUK!", `${data.player_name} +2 Kartu`, "#ef4444"); 
     }
 };

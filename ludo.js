@@ -59,18 +59,22 @@ function drawBoard2D() {
     console.log("Papan Ludo VIP menggunakan Grid CSS Statis.");
 }
 
-// --- FUNGSI ANIMASI JALAN LANGKAH DEMI LANGKAH ---
+// --- FUNGSI ANIMASI JALAN LANGKAH DEMI LANGKAH DENGAN SFX ---
 async function movePawnStepByStep(pawnEl, color, fromPos, toPos, pawnIndex) {
     if (fromPos === -1 || toPos === -1 || fromPos >= toPos) {
         const cssPos = getLudoPosPercent(color, toPos, pawnIndex);
         pawnEl.style.left = cssPos.left;
         pawnEl.style.top = cssPos.top;
+        if (toPos !== -1 && window.playSound) window.playSound('move');
         return;
     }
     for (let p = fromPos + 1; p <= toPos; p++) {
         const cssPos = getLudoPosPercent(color, p, pawnIndex);
         pawnEl.style.left = cssPos.left;
         pawnEl.style.top = cssPos.top;
+        
+        if (window.playSound) window.playSound('move'); // SFX Tiap Langkah
+        
         await new Promise(resolve => setTimeout(resolve, 300));
     }
 }
@@ -219,6 +223,7 @@ window.handleLudoMessage = function(data) {
     }
     else if (data.type === 'dice_rolled') {
         if (window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        if (window.playSound) window.playSound('dice'); // INJEKSI SFX DADU
         
         let activeColor = 'red';
         if (currentLudoState && currentLudoState.players) {
@@ -247,12 +252,14 @@ window.handleLudoMessage = function(data) {
     // --- EVENT KHUSUS: POPUP ATURAN LUDO ---
     else if (data.type === 'ludo_event') {
         if (data.event === 'penalty_3x6') {
+            if (window.playSound) window.playSound('lose');
             if (window.showEpicPopup) window.showEpicPopup("HANGUS!", "3x Angka 6 Beruntun", "#ef4444");
             if (window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
         }
         else if (data.event === 'goal_bonus') {
             // Popup ini akan delay 1.5 detik agar tidak bentrok dengan Popup "GOAL" bawaan di index.html
             setTimeout(() => {
+                if (window.playSound) window.playSound('win');
                 if (window.showEpicPopup) window.showEpicPopup("BONUS!", "Giliran Tambahan!", "#10b981");
                 if (window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
             }, 1500); 
