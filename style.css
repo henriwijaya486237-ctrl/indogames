@@ -1,5 +1,5 @@
 :root {
-    /* TEMA DEFAULT MALAM */
+    /* TEMA DEFAULT */
     --primary-color: #0ea5e9; 
     --secondary-color: #6366f1; 
     --danger-color: #f43f5e; 
@@ -7,7 +7,7 @@
     
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #1e293b 100%);
     --glass-bg: rgba(14, 165, 233, 0.05);
-    --glass-border: rgba(14, 165, 233, 0.25);
+    --glass-border: rgba(14, 165, 233, 0.3);
 }
 
 * {
@@ -19,6 +19,8 @@ body {
     margin: 0;
     overflow: hidden;
     background: var(--bg-gradient);
+    background-size: 200% 200%;
+    animation: gradientBreathe 15s ease infinite;
     color: white;
     user-select: none;
     -webkit-user-select: none;
@@ -26,43 +28,74 @@ body {
     transition: background 1s ease-in-out;
 }
 
-/* --- ANIMASI BACKGROUND --- */
+/* ANIMASI LATAR MENGALIR */
+@keyframes gradientBreathe {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* --- KELAS TEMA DINAMIS --- */
+body.theme-cyberpunk { --primary-color: #0ea5e9; --glass-border: rgba(14, 165, 233, 0.6); }
+body.theme-esports { --primary-color: #ef4444; --glass-border: rgba(239, 68, 68, 0.5); }
+body.theme-arctic { --primary-color: #38bdf8; --glass-border: rgba(56, 189, 248, 0.5); }
+body.theme-sakura { --primary-color: #ec4899; --glass-border: rgba(236, 72, 153, 0.5); }
+body.theme-premium { --primary-color: #f59e0b; --glass-border: rgba(245, 158, 11, 0.6); }
+
+/* --- WADAH PARTIKEL --- */
 #animated-bg {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1; pointer-events: none; overflow: hidden;
     transition: opacity 0.8s ease; 
 }
-.cloud {
-    position: absolute; width: 150px; height: 50px;
-    background: rgba(255, 255, 255, 0.15); border-radius: 50px;
-    animation: floatCloud linear infinite; filter: blur(2px);
-}
-.cloud::before, .cloud::after {
-    content: ''; position: absolute; background: rgba(255, 255, 255, 0.15); border-radius: 50%;
-}
-.cloud::before { width: 60px; height: 60px; top: -30px; left: 20px; }
-.cloud::after { width: 80px; height: 80px; top: -40px; right: 20px; }
-@keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
+#particles-container { width: 100%; height: 100%; position: relative; }
 
-.bird { position: absolute; width: 20px; height: 10px; animation: flyBird linear infinite; }
-.bird::before, .bird::after { content: ''; position: absolute; top: 0; width: 12px; height: 2px; background: rgba(255, 255, 255, 0.4); border-radius: 2px; }
-.bird::before { left: 0; transform-origin: right center; animation: flapLeft 0.6s ease-in-out infinite alternate; }
-.bird::after { right: 0; transform-origin: left center; animation: flapRight 0.6s ease-in-out infinite alternate; }
-@keyframes flapLeft { 0% { transform: rotate(15deg); } 100% { transform: rotate(-45deg); } }
-@keyframes flapRight { 0% { transform: rotate(-15deg); } 100% { transform: rotate(45deg); } }
-@keyframes flyBird { 0% { left: -50px; transform: translateY(0); } 100% { left: 110vw; transform: translateY(-80px); } }
+/* TIPE PARTIKEL */
+.particle { position: absolute; pointer-events: none; opacity: 0; }
 
-.paused-animation, .paused-animation::before, .paused-animation::after { animation-play-state: paused !important; }
+.snow { background: white; border-radius: 50%; filter: blur(1px); animation: fall linear infinite; box-shadow: 0 0 5px rgba(255,255,255,0.8); }
+.petal { background: #fbcfe8; border-radius: 10px 0 10px 0; animation: fallSpin linear infinite; box-shadow: 0 0 5px #f9a8d4; }
+.glitch-box { background: #0ea5e9; animation: floatUp linear infinite; box-shadow: 0 0 10px #0ea5e9; }
+.ember { background: #f59e0b; border-radius: 50%; animation: floatUpEmber linear infinite; filter: blur(1px); box-shadow: 0 0 8px #d97706; }
+
+@keyframes fall {
+    0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { transform: translateY(110vh) translateX(30px); opacity: 0; }
+}
+@keyframes fallSpin {
+    0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.9; }
+    90% { opacity: 0.9; }
+    100% { transform: translateY(110vh) translateX(60px) rotate(360deg); opacity: 0; }
+}
+@keyframes floatUp {
+    0% { transform: translateY(110vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-10vh) translateX(-20px); opacity: 0; }
+}
+@keyframes floatUpEmber {
+    0% { transform: translateY(110vh) translateX(0) scale(1); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) translateX(40px) scale(0.3); opacity: 0; }
+}
+
+.paused-animation, .paused-animation * { animation-play-state: paused !important; }
 
 /* --- GLASSMORPHISM UTILS --- */
 .glass-panel {
     background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    transition: border-color 0.5s ease;
 }
 .glass-panel-small {
     background: rgba(2, 6, 23, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(14, 165, 233, 0.15); border-radius: 12px;
+    border: 1px solid var(--glass-border); border-radius: 12px;
+    transition: border-color 0.5s ease;
 }
 .glass-panel-full {
     background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -119,11 +152,12 @@ body {
     flex: 0 0 220px; 
     height: 310px; /* DITINGKATKAN MENJADI 310PX AGAR PAS MENAMPUNG STATISTIK BARU */
     background: linear-gradient(135deg, #1e293b, #0f172a);
-    border: 2px solid;
+    border: 2px solid var(--primary-color);
     border-radius: 15px;
     box-shadow: inset 0 1px 5px rgba(255,255,255,0.1), 0 8px 0 rgba(0,0,0,0.6), 0 15px 20px rgba(0,0,0,0.8);
     position: relative;
     margin-bottom: 8px; 
+    transition: border-color 0.5s ease;
 }
 .leaderboard-board .lb-inner {
     width: 100%; height: 100%; padding: 12px; display: flex; flex-direction: column; transition: transform 0.2s;
@@ -145,8 +179,8 @@ body {
 /* MODAL LEADERBOARD (LIST BESAR) */
 /* CATATAN: Sama halnya dengan mini-list, konten teks di atur lewat JS. CSS ini menangani card besarnya. */
 .lb-modal-item {
-    background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(14, 165, 233, 0.3);
-    border-radius: 8px; margin-bottom: 5px;
+    background: rgba(15, 23, 42, 0.8); border: 1px solid var(--glass-border);
+    border-radius: 8px; margin-bottom: 5px; transition: border-color 0.5s ease;
 }
 .lb-modal-item .lb-rank.gold { color: #fcd34d; text-shadow: 0 0 8px #f59e0b; }
 .lb-modal-item .lb-rank.silver { color: #cbd5e1; text-shadow: 0 0 8px #94a3b8; }
@@ -163,15 +197,15 @@ body {
 
 /* --- INPUTS & BUTTONS --- */
 .modern-input { width: 100%; padding: 14px; margin-bottom: 15px; background: rgba(2, 6, 23, 0.6); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 1.1rem; text-align: center; text-transform: uppercase; font-weight: 600; outline: none; transition: all 0.3s ease; }
-.modern-input:focus { background: rgba(2, 6, 23, 0.8); border-color: var(--primary-color); box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+.modern-input:focus { background: rgba(2, 6, 23, 0.8); border-color: var(--primary-color); box-shadow: 0 0 15px var(--glass-border); }
 .modern-input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 400; }
 
 .modern-btn { border: none; border-radius: 12px; padding: 14px 20px; font-size: 1rem; font-weight: 600; color: white; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4); }
 .modern-btn:active { transform: scale(0.95); }
 .modern-btn:disabled { opacity: 0.5; pointer-events: none; }
 .modern-btn.small { padding: 5px 10px; font-size: 0.7rem; border-radius: 6px; }
-.modern-btn.primary { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
-.modern-btn.secondary { background: rgba(2, 6, 23, 0.5); border: 1px solid rgba(14, 165, 233, 0.4); }
+.modern-btn.primary { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); box-shadow: 0 0 10px var(--glass-border); }
+.modern-btn.secondary { background: rgba(2, 6, 23, 0.5); border: 1px solid var(--glass-border); }
 .modern-btn.action { background: linear-gradient(135deg, #0284c7, #06b6d4); font-size: 1.1rem; }
 .modern-btn.warning { background: linear-gradient(135deg, #d97706, #f59e0b); font-size: 1.1rem; }
 .modern-btn.danger { background: linear-gradient(135deg, #be123c, #e11d48); }
@@ -197,10 +231,6 @@ body {
 .vs-card { background: rgba(2, 6, 23, 0.85); border: 1px solid; border-radius: 8px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px); }
 .vs-name { font-weight: 800; font-size: 0.65rem; letter-spacing: 0.5px; color: white; text-transform: uppercase; white-space: nowrap; }
 
-.cyber-modal { background: linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(15, 23, 42, 0.98)); border: 1px solid #0ea5e9; box-shadow: 0 0 20px rgba(14, 165, 233, 0.3), inset 0 0 10px rgba(14, 165, 233, 0.1); border-radius: 12px; }
-.cyber-btn { background: rgba(14, 165, 233, 0.05); border: 1px solid rgba(14, 165, 233, 0.4); color: #fff; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; padding: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
-.cyber-btn:hover, .cyber-btn:active { background: rgba(14, 165, 233, 0.25); box-shadow: 0 0 15px rgba(14, 165, 233, 0.5); border-color: #0ea5e9; transform: scale(0.95); }
-
 .ludo-hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px; }
 .ludo-player-card { background: rgba(15, 23, 42, 0.85); border: 2px solid; border-radius: 12px; padding: 8px; display: flex; align-items: center; gap: 8px; position: relative; backdrop-filter: blur(8px); transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 .ludo-player-card.active-turn { transform: scale(1.05); }
@@ -218,42 +248,3 @@ body {
 .rolling-dice { animation: shakeDice 0.4s ease-in-out infinite; }
 @keyframes pulseDice { from { transform: scale(1); box-shadow: 0 0 5px #34d399; } to { transform: scale(1.15); box-shadow: 0 0 20px #34d399; } }
 @keyframes shakeDice { 0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(-25deg) scale(1.2); } 50% { transform: rotate(0deg) scale(1); } 75% { transform: rotate(25deg) scale(1.2); } 100% { transform: rotate(0deg) scale(1); } }
-
-.ludo-macro-grid { display: grid; grid-template-areas: "red-base top-path green-base" "left-path center right-path" "blue-base bottom-path yellow-base"; grid-template-columns: 40% 20% 40%; grid-template-rows: 40% 20% 40%; width: 100%; height: 100%; background: #fff; border: 4px solid #0f172a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden; }
-.ludo-base { display: flex; justify-content: center; align-items: center; padding: 18%; }
-.red-base { grid-area: red-base; background: #ef4444; }
-.green-base { grid-area: green-base; background: #10b981; }
-.yellow-base { grid-area: yellow-base; background: #f59e0b; }
-.blue-base { grid-area: blue-base; background: #3b82f6; }
-.base-white-box { background: #fff; width: 100%; height: 100%; border-radius: 15%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15%; padding: 15%; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
-.pawn-spot { border-radius: 50%; border: 3px solid rgba(0,0,0,0.1); box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
-.red-spot { background: #ef4444; }
-.green-spot { background: #10b981; }
-.yellow-spot { background: #f59e0b; }
-.blue-spot { background: #3b82f6; }
-
-.ludo-path { display: grid; }
-.top-path { grid-area: top-path; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(6, 1fr); }
-.bottom-path { grid-area: bottom-path; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(6, 1fr); }
-.left-path { grid-area: left-path; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); }
-.right-path { grid-area: right-path; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); }
-.cell { border: 1px solid rgba(15, 23, 42, 0.15); display: flex; justify-content: center; align-items: center; position: relative; background: #f8fafc; }
-.hr-red, .red-start { background: rgba(239, 68, 68, 0.7); }
-.hr-green, .green-start { background: rgba(16, 185, 129, 0.7); }
-.hr-yellow, .yellow-start { background: rgba(245, 158, 11, 0.7); }
-.hr-blue, .blue-start { background: rgba(59, 130, 246, 0.7); }
-.safe-star::after { content: '⭐'; font-size: 1rem; position: absolute; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
-
-.ludo-center-goal { grid-area: center; background: conic-gradient(from 315deg, #10b981 0deg 90deg, #f59e0b 90deg 180deg, #3b82f6 180deg 270deg, #ef4444 270deg 360deg); box-shadow: inset 0 0 10px rgba(0,0,0,0.6); border: 1px solid #0f172a; }
-
-#ludo-pawns-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
-.ludo-pawn-token { position: absolute; width: 6.66%; height: 6.66%; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 2px 5px rgba(255,255,255,0.3); background-size: cover; background-position: center; background-color: #1e293b; cursor: pointer; pointer-events: auto; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s ease-in-out, left 0.4s ease-in-out; transform-origin: center; z-index: 20; }
-.ludo-pawn-token:active { transform: scale(0.7) !important; }
-.ludo-pawn-token.Red { border-color: #ef4444; }
-.ludo-pawn-token.Green { border-color: #10b981; }
-.ludo-pawn-token.Blue { border-color: #3b82f6; }
-.ludo-pawn-token.Yellow { border-color: #f59e0b; }
-
-#snake-wrapper { display: none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; z-index: 15; pointer-events: auto; }
-#snake-board-2d-container { position: relative; width: 100%; aspect-ratio: 1; margin: 10px 0; border: 4px solid #0f172a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); background: #f8fafc; touch-action: none; }
-#snake-pawns-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }

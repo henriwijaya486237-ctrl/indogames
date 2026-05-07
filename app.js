@@ -946,16 +946,49 @@ document.getElementById('toggle-simple-mode-btn').addEventListener('click', () =
     if (window.toggleThreeJSSimpleMode) window.toggleThreeJSSimpleMode(isSimpleMode);
 });
 
-
+// =====================================================================
+// SISTEM TEMA & PARTIKEL DINAMIS (BARU)
+// =====================================================================
 const themes = [
-    { id: 'night', name: 'MALAM', gradient: 'linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #1e293b 100%)', showBirds: true },
-    { id: 'sunrise', name: 'SUNRISE', gradient: 'linear-gradient(135deg, #4c0519 0%, #be123c 50%, #f59e0b 100%)', showBirds: true },
-    { id: 'morning', name: 'PAGI', gradient: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #bae6fd 100%)', showBirds: true },
-    { id: 'afternoon', name: 'SIANG', gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #7dd3fc 100%)', showBirds: true },
-    { id: 'sunset', name: 'SUNSET', gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #fcd34d 100%)', showBirds: true }
+    { id: 'cyberpunk', name: 'CYBER NEON', gradient: 'linear-gradient(135deg, #4c1d95 0%, #0f172a 50%, #064e3b 100%)', particleType: 'glitch-box', count: 15 },
+    { id: 'esports', name: 'ESPORTS PRO', gradient: 'linear-gradient(135deg, #0f172a 0%, #020617 60%, #7f1d1d 100%)', particleType: 'ember', count: 20 },
+    { id: 'arctic', name: 'ARCTIC FROST', gradient: 'linear-gradient(135deg, #f0f9ff 0%, #bae6fd 50%, #0369a1 100%)', particleType: 'snow', count: 40 },
+    { id: 'sakura', name: 'SAKURA BLOSSOM', gradient: 'linear-gradient(135deg, #fdf2f8 0%, #f9a8d4 50%, #be185d 100%)', particleType: 'petal', count: 30 },
+    { id: 'premium', name: 'ROYAL VIP', gradient: 'linear-gradient(135deg, #020617 0%, #1e293b 50%, #b45309 100%)', particleType: 'ember', count: 25 }
 ];
+
+function createParticles(type, count) {
+    const container = document.getElementById('particles-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = `particle ${type}`;
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.animationDuration = (Math.random() * 10 + 5) + 's';
+        
+        if (type === 'snow' || type === 'ember') {
+            const size = Math.random() * 4 + 2;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+        } else if (type === 'petal') {
+            const size = Math.random() * 10 + 6;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+        } else if (type === 'glitch-box') {
+            const size = Math.random() * 12 + 4;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+        }
+        container.appendChild(p);
+    }
+}
+
 let currentThemeIndex = 0; 
 const toggleThemeBtn = document.getElementById('toggle-theme-btn');
+
 if(toggleThemeBtn) {
     toggleThemeBtn.addEventListener('click', () => {
         tg.HapticFeedback.impactOccurred('light');
@@ -965,12 +998,21 @@ if(toggleThemeBtn) {
         document.getElementById('theme-status').innerText = selectedTheme.name;
         document.documentElement.style.setProperty('--bg-gradient', selectedTheme.gradient);
         
-        const birds = document.querySelectorAll('.bird');
-        birds.forEach(bird => {
-            bird.style.display = selectedTheme.showBirds ? 'block' : 'none';
-        });
+        // Ganti Kelas CSS Body untuk efek Glow yang sesuai
+        document.body.className = `theme-${selectedTheme.id}`;
+        
+        // Hasilkan Partikel baru
+        createParticles(selectedTheme.particleType, selectedTheme.count);
     });
 }
+
+// Inisialisasi Tema Pertama Saat Dimuat
+const initialTheme = themes[0];
+document.body.className = `theme-${initialTheme.id}`;
+document.documentElement.style.setProperty('--bg-gradient', initialTheme.gradient);
+createParticles(initialTheme.particleType, initialTheme.count);
+
+// =====================================================================
 
 if (window.userId === OWNER_ID || window.userId === "7019297628" || window.userId === 7019297628) {
     document.getElementById('owner-panel-btn').style.display = 'flex';
