@@ -1,5 +1,5 @@
 // --- KONFIGURASI PENTING ---
-const WS_URL = 'wss://friend-pouncing-oval.ngrok-free.dev'; 
+const WS_URL = 'wss://version-limb-willpower.ngrok-free.dev'; 
 const BOT_LINK = 'https://t.me/UnoYukbot'; 
 const OWNER_ID = 7019297628; 
 
