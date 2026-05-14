@@ -23,6 +23,7 @@ window.currentRoom = null;
 window.currentGameType = 'UNO';
 window.isMyTurn = false;
 window.ws = null;
+window.pingInterval = null; // --- FIX MEMORY LEAK: Deklarasi interval ping global ---
 
 // =====================================================================
 // SISTEM AUDIO (BGM & SFX) - ANTI CRASH / 404 SAFE
@@ -492,8 +493,14 @@ function connectWebSocket() {
             // MEMINTA DATA KLASMEN DARI POSTGRESQL SAAT STARTUP
             window.ws.send(JSON.stringify({ type: 'get_leaderboard' }));
 
-            setInterval(() => {
-                if (window.ws && window.ws.readyState === WebSocket.OPEN) window.ws.send(JSON.stringify({ type: 'ping' }));
+            // --- FIX MEMORY LEAK: Bersihkan interval lama sebelum membuat yang baru ---
+            if (window.pingInterval) {
+                clearInterval(window.pingInterval);
+            }
+            window.pingInterval = setInterval(() => {
+                if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+                    window.ws.send(JSON.stringify({ type: 'ping' }));
+                }
             }, 30000); 
 
             if (autoJoinRoomCode) {
@@ -863,16 +870,28 @@ function sendChat() {
 document.getElementById('chat-send-btn').addEventListener('click', sendChat);
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChat(); });
 
+// FIX MEMORY LEAK: Modifikasi fungsi appendChatMessage
 function appendChatMessage(sender, text, isMe) {
     const bubble = document.createElement('div');
     bubble.className = `chat-bubble ${isMe ? 'me' : 'other'}`;
+    
     if (!isMe) {
         const senderName = document.createElement('div');
-        senderName.className = 'chat-sender'; senderName.innerText = sender;
+        senderName.className = 'chat-sender'; 
+        senderName.innerText = sender;
         bubble.appendChild(senderName);
     }
-    const messageText = document.createElement('span'); messageText.innerText = text;
-    bubble.appendChild(messageText); chatMessages.appendChild(bubble);
+    
+    const messageText = document.createElement('span'); 
+    messageText.innerText = text;
+    bubble.appendChild(messageText); 
+    chatMessages.appendChild(bubble);
+    
+    // PEMBATASAN DOM (Max 15 Elemen) untuk menghindari memory leak pada ponsel
+    while (chatMessages.children.length > 15) {
+        chatMessages.removeChild(chatMessages.firstChild);
+    }
+    
     chatMessages.scrollTop = chatMessages.scrollHeight; 
 }
 
